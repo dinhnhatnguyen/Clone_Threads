@@ -1,18 +1,22 @@
-import ProfileHeader from "@/components/shared/ProfileHeader";
-import { fetchUser } from "@/lib/actions/user.actions";
-import { currentUser } from "@clerk/nextjs";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { redirect } from "next/navigation";
-import { profileTabs } from "@/constants";
 import Image from "next/image";
+import { currentUser } from "@clerk/nextjs";
+import { redirect } from "next/navigation";
+
+import { profileTabs } from "@/constants";
+
 import ThreadsTab from "@/components/shared/ThreadsTab";
+import ProfileHeader from "@/components/shared/ProfileHeader";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+import { fetchUser } from "@/lib/actions/user.actions";
+
 async function Page({ params }: { params: { id: string } }) {
   const user = await currentUser();
-
   if (!user) return null;
-  const userInfo = await fetchUser(user.id);
 
-  if (!userInfo) redirect("/onboarding");
+  const userInfo = await fetchUser(params.id);
+  if (!userInfo?.onboarded) redirect("/onboarding");
+
   return (
     <section>
       <ProfileHeader
@@ -23,8 +27,9 @@ async function Page({ params }: { params: { id: string } }) {
         imgUrl={userInfo.image}
         bio={userInfo.bio}
       />
+
       <div className="mt-9">
-        <Tabs defaultValue="thread" className="w-full">
+        <Tabs defaultValue="threads" className="w-full">
           <TabsList className="tab">
             {profileTabs.map((tab) => (
               <TabsTrigger key={tab.label} value={tab.value} className="tab">
@@ -45,7 +50,6 @@ async function Page({ params }: { params: { id: string } }) {
               </TabsTrigger>
             ))}
           </TabsList>
-
           {profileTabs.map((tab) => (
             <TabsContent
               key={`content-${tab.label}`}
@@ -65,5 +69,4 @@ async function Page({ params }: { params: { id: string } }) {
     </section>
   );
 }
-
 export default Page;
